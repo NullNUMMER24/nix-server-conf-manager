@@ -1,0 +1,1 @@
+# nix-server-conf-manager
