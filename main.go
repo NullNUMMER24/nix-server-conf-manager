@@ -50,24 +50,30 @@ func saveConfig(cfg *Config) error {
 }
 
 func getRemoteHash(repoPath, branch string) (string, error) {
-	cmd := exec.Command("git", "-C", repoPath, "fetch", "origin", branch)
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("git fetch failed: %v", err)
-	}
-
-	cmd = exec.Command("git", "-C", repoPath, "rev-parse", fmt.Sprintf("origin/%s", branch))
+	cmd := exec.Command("git", "-C", repoPath, "ls-remote", "origin", branch)
 	out, err := cmd.Output()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get remote hash: %v", err)
 	}
-	return strings.TrimSpace(string(out)), nil
+	parts := strings.Fields(string(out))
+	if len(parts) > 0 {
+		return parts[0], nil
+	}
+	return "", fmt.Errorf("no hash found for branch %s", branch)
 }
 
-func getLocalHash(repoPath string) (string, error) {
-	cmd := exec.Command("git", "-C", repoPath, "rev-parse", "HEAD")
+func getLocalHash(repoPath, branch string) (string, error) {
+	// Ensure the local branch is updated with the latest changes from the remote
+	cmd := exec.Command("git", "-C", repoPath, "fetch", "origin", branch)
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("failed to fetch updates for branch %s: %v", branch, err)
+	}
+
+	// Retrieve the latest commit hash for the local branch
+	cmd = exec.Command("git", "-C", repoPath, "rev-parse", branch)
 	out, err := cmd.Output()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get local hash: %v", err)
 	}
 	return strings.TrimSpace(string(out)), nil
 }
@@ -153,7 +159,7 @@ func main() {
 		return
 	}
 
-	localHash, err := getLocalHash(cfg.RepoPath)
+	localHash, err := getLocalHash(cfg.RepoPath, cfg.Branch)
 	if err != nil {
 		sendDiscord(cfg.DiscordWebhook, fmt.Sprintf("Failed to get local hash on `%s`: %v", hostname, err))
 		return

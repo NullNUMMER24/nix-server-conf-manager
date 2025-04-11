@@ -1,8 +1,7 @@
 {
-    "repo_url": "git@github.com:NullNUMMER24/nixos-dotfiles.git",
+    "repo_url": "",
     "branch": "main",
-    "repo_path": "/home/jamie/git/nixos-dotfiles",
-    "discord_webhook": "https://discord.com/api/webhooks/1359260283847053677/8S775WhCC_uiHzal0BDIwMzKR1ojqg54NfAyz_vWKDnKTRo5L-xQQYd1tw0lD9tV8J1g",
-    "last_commit_hash": "b2a75241054d52d67a90a2b9c2414b7937ad8c6e"
+    "repo_path": "",
+    "discord_webhook": ""
 }
   
