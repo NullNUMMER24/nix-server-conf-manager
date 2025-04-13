@@ -20,34 +20,19 @@ type Config struct {
 }
 
 func loadConfig() (*Config, error) {
-	file, err := os.Open("/etc/nix-config-manager/config.json")
+	file, err := os.Open("/etc/nix-config-manager.json")
 	if err != nil {
-		return nil, fmt.Errorf("failed to open config.json: %v", err)
+		return nil, fmt.Errorf("failed to open nix-config-manager.json: %v", err)
 	}
 	defer file.Close()
 
 	var cfg Config
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&cfg); err != nil {
-		return nil, fmt.Errorf("failed to decode config.json: %v", err)
+		return nil, fmt.Errorf("failed to decode nix-config-manager.json: %v", err)
 	}
 	return &cfg, nil
 }
-
-// func saveConfig(cfg *Config) error {
-// 	file, err := os.Create("config.json")
-// 	if err != nil {
-// 		return fmt.Errorf("failed to create config.json: %v", err)
-// 	}
-// 	defer file.Close()
-
-// 	encoder := json.NewEncoder(file)
-// 	encoder.SetIndent("", "  ")
-// 	if err := encoder.Encode(cfg); err != nil {
-// 		return fmt.Errorf("failed to encode config.json: %v", err)
-// 	}
-// 	return nil
-// }
 
 func getRemoteHash(repoPath, branch string) (string, error) {
 	cmd := exec.Command("git", "-C", repoPath, "ls-remote", "origin", branch)
@@ -184,11 +169,6 @@ func main() {
 		sendDiscord(cfg.DiscordWebhook, fmt.Sprintf("NixOS rebuild failed on `%s`: %v", hostname, err))
 		return
 	}
-
-	// cfg.LastCommitHash = remoteHash
-	// if err := saveConfig(cfg); err != nil {
-	// 	log.Printf("Failed to save config: %v", err)
-	// }
 
 	log.Printf("NixOS rebuild successful.")
 	sendDiscord(cfg.DiscordWebhook, fmt.Sprintf("NixOS rebuild successful on `%s`.", hostname))
