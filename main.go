@@ -89,8 +89,9 @@ func pullRepo(repoPath, branch string) error {
 	return nil
 }
 
-func rebuildNixOS() error {
-	cmd := exec.Command("nixos-rebuild", "switch")
+func rebuildNixOS(user, hostname string) error {
+	configPath := fmt.Sprintf("/home/%s/git/nixos-dotfiles/hosts/%s/configuration.nix", user, hostname)
+	cmd := exec.Command("sudo", "nixos-rebuild", "switch", "-I", fmt.Sprintf("nixos-config=%s", configPath))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -165,7 +166,12 @@ func main() {
 		return
 	}
 
-	if err := rebuildNixOS(); err != nil {
+	currentUser := os.Getenv("USER")
+	if currentUser == "" {
+		log.Println("USER environment variable not set")
+		currentUser = "unknown"
+	}
+	if err := rebuildNixOS(currentUser, hostname); err != nil {
 		sendDiscord(cfg.DiscordWebhook, fmt.Sprintf("NixOS rebuild failed on `%s`: %v", hostname, err))
 		return
 	}
